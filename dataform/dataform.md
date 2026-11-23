@@ -45,10 +45,7 @@ To skip a step:
    ```sh
    python3 upload_step.py --participant PARTICIPANT_NUMBER --workspace YOUR_WORKSPACE --step 1
    ```
-   The uploader replaces differing files included in the selected step by
-   default. Files outside that snapshot are left in the workspace; review any
-   extra definition files it reports, since they may also run during
-   compilation.
+   The uploader resets your files to match the step exactly.
 4. Return to Dataform, check the workspace compilation and run the actions for
    the exercise with **Execute with user credentials**. Uploading only writes
    workspace files; it does not commit them or execute the workflow.

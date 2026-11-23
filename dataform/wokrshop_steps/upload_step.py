@@ -109,8 +109,8 @@ class Workspace:
                     if "file" in entry:
                         files.add(entry["file"])
                     elif "directory" in entry:
-                        directories.add(entry["directory"])
-                        if directory or entry["directory"] in ("definitions", "includes"):
+                        if entry["directory"] not in directories:
+                            directories.add(entry["directory"])
                             pending.append(entry["directory"])
                     else:
                         raise ValueError(f"Unexpected workspace directory entry: {entry}")
@@ -132,42 +132,67 @@ class Workspace:
             "contents": base64.b64encode(contents).decode("ascii"),
         })
 
+    def remove_file(self, path):
+        self.request("removeFile", body={"path": path})
+
+    def remove_directory(self, path):
+        self.request("removeDirectory", body={"path": path})
+
 
 def upload_snapshot(workspace, snapshot):
     remote_files, remote_dirs = workspace.list_files()
-    directories = set()
+    snapshot_dirs = set()
     for path in snapshot:
         parent = PurePosixPath(path).parent
         while str(parent) != ".":
-            directories.add(str(parent))
+            snapshot_dirs.add(str(parent))
             parent = parent.parent
-    for directory in sorted(directories):
-        if directory in remote_files:
-            raise ValueError(f"Workspace file blocks snapshot directory: {directory}")
-    for path in snapshot:
-        if path in remote_dirs:
-            raise ValueError(f"Workspace directory blocks snapshot file: {path}")
 
+    for path in sorted(remote_files & snapshot_dirs):
+        workspace.remove_file(path)
+        print(f"Removed conflicting file {path}")
+    for path in sorted(remote_dirs & snapshot.keys()):
+        workspace.remove_directory(path)
+        print(f"Removed conflicting directory {path}")
+
+    remote_files, remote_dirs = workspace.list_files()
     changed = {
         path: contents for path, contents in snapshot.items()
         if path not in remote_files or workspace.read_file(path) != contents
     }
-    extras = sorted(
-        path for path in remote_files - snapshot.keys()
-        if path.startswith(("definitions/", "includes/")) and path.endswith((".sqlx", ".js"))
-    )
-    if extras:
-        print("These workspace code files are not in the snapshot and will remain:")
-        for path in extras:
-            print(f"  {path}")
 
-    for directory in sorted(directories - remote_dirs, key=lambda path: (path.count("/"), path)):
+    for directory in sorted(snapshot_dirs - remote_dirs, key=lambda path: (path.count("/"), path)):
         workspace.make_directory(directory)
         print(f"Created directory {directory}")
     for path, contents in sorted(changed.items()):
         workspace.write_file(path, contents)
         print(f"Uploaded {path}")
-    print(f"Done: {len(changed)} file(s) uploaded. Changes are uncommitted; no workflow was run.")
+
+    remote_files, remote_dirs = workspace.list_files()
+    extra_dirs = remote_dirs - snapshot_dirs - {""}
+    top_level_extra_dirs = []
+    for directory in sorted(extra_dirs, key=lambda path: (path.count("/"), path)):
+        parent = PurePosixPath(directory).parent
+        while str(parent) != "." and str(parent) not in extra_dirs:
+            parent = parent.parent
+        if str(parent) == ".":
+            top_level_extra_dirs.append(directory)
+
+    for directory in top_level_extra_dirs:
+        workspace.remove_directory(directory)
+        print(f"Removed directory {directory}")
+
+    extra_files = remote_files - snapshot.keys()
+    for directory in top_level_extra_dirs:
+        extra_files = {
+            path for path in extra_files
+            if not path.startswith(f"{directory}/")
+        }
+    for path in sorted(extra_files):
+        workspace.remove_file(path)
+        print(f"Removed file {path}")
+
+    print(f"Done: workspace now matches the selected step. Changes are uncommitted; no workflow was run.")
 
 
 def main():
