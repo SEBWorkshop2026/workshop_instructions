@@ -10,6 +10,8 @@ clone `{your_project}.{gold_dataset_name}.{table_name}`
 Go to your table snapshot Settings -> `Open in` -> `Python notebook`
 
 ![Open Python notebook](images/open_notebook.png)
+
+If it asks for a region, choose `europe-central2`
 ## Setup notebook runtime
 Press the arrow next to `Connect` -> `Connect to a runtime`
 
@@ -425,3 +427,9 @@ print(preds.groupby("decile").agg(n=("pd", "size"),
                                   avg_pd=("pd", "mean"),
                                   default_rate=("defaulted", "mean")))
 ```
+
+# Extra things to try
+- Try class balancing by adding `"auto_class_weights": True,` in the model [`options`](#model-training)
+- Try hyperparameter tuning. Add `l1_reg`, `l2_reg` in the model options.
+- Try a different model `BOOSTED_TREE_CLASSIFIER` or `RANDOM_FOREST_CLASSIFIER`
+- Summarize the data processing steps you did and create a new flow to process and perform predictions on new unseen data.
