@@ -1,0 +1,24 @@
+config {
+  type: "incremental",
+  schema: "silver",
+  bigquery: {
+    partitionBy: "DATE_TRUNC(reporting_date, MONTH)"
+  }
+}
+
+pre_operations {
+  ${when(incremental(), `DELETE FROM ${self()} WHERE reporting_date = DATE '${reportingDate()}'`)}
+}
+
+SELECT
+  debtor_identifier AS debtor_id,
+  reporting_date,
+  income,
+  funds_available,
+  currency,
+  credit_rating,
+  household_income,
+  employment_industry,
+  proposed_risk_class
+FROM ${ref("bronze", "debtor_financial")}
+WHERE reporting_date = DATE '${reportingDate()}'
