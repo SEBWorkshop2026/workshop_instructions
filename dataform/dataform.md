@@ -148,6 +148,9 @@ compilation settings used for the run.
    CSV bucket. Do not select **Run with full refresh** if you want to retain
    previously loaded months.
 
+![Release](images/release.png)
+![Release Create](images/release_create.png)
+
 To load another month, create a separate release configuration with a unique
 ID, such as `period-2025-04`, and set its `reporting_period` to `2025-04`.
 Compile and execute each release on demand, one invocation at a time. The
