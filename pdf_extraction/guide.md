@@ -22,7 +22,7 @@ then look at how to bring that cost down without losing accuracy.
 ## What you need
 
 - The project you work in: `ws2026-02`. Location is `EU`.
-- Your participant number, the same one as your Dataform repository `participant-N`.
+- Your participant number. You don't need to remember it: step 0 shows you where to find it.
 - Yours: the dataset `credit_memos_N`, with your number for N.
 - Shared and read-only: the dataset `credit_memos`. It holds the PDFs as a table, two Gemini models, the
   answer key and two reference results I ran before the session.
@@ -34,7 +34,7 @@ more files. The memos are synthetic, by the way. Hallvik Bank, its borrowers and
 ## How we share the project
 
 Everyone in the room works in `ws2026-02` at the same time, so the lab keeps your work and your neighbour's
-apart:
+apart. This is what you see in the Explorer, taking participant 7 as an example:
 
 ```
 ws2026-02
@@ -44,10 +44,12 @@ ws2026-02
 │   ├── labels                  the answer key
 │   ├── model_prices            today's prices per model
 │   └── extract_reference(_lite)  my runs from before the session
-├── credit_memos_1              one dataset per participant
-├── credit_memos_2
-└── ...
+├── credit_memos_7              yours, for this lab
+└── external_7, bronze_7, ...   yours too, from the earlier sessions
 ```
+
+You only see your own datasets and the shared ones. Everybody else's datasets exist too, but they are
+invisible to you, just as yours are to them.
 
 Three things keep everybody out of each other's way:
 
@@ -55,8 +57,9 @@ Three things keep everybody out of each other's way:
    `credit_memos` and nothing more, so nothing you run can break the PDFs, the models or the labels for the
    rest of the room.
 2. **You can only write to your own dataset.** Every query that writes something contains the placeholder
-   `credit_memos_N`, which you replace with your dataset. Your rights stop there: writing into another
-   participant's dataset fails with "Access Denied", so a typo can't damage anyone else's work.
+   `credit_memos_N`, which you replace with your dataset. Your rights stop there: you can't see anyone
+   else's datasets, and a query that names one by mistake fails with "Access Denied", so a typo can't
+   damage anyone else's work.
 3. **Forgetting the replacement fails safely.** There is no dataset called `credit_memos_N`, so a query
    where you forgot to replace it stops with "Not found".
 
@@ -71,6 +74,10 @@ shows you how to deal with it.
 Open <https://console.cloud.google.com/bigquery>, pick `ws2026-02` in the project picker at the top, and open
 a new query tab with **+**. One tab is enough for the whole lab.
 
+In the Explorer panel on the left, open `ws2026-02`. Next to the shared `credit_memos` you'll see your own
+datasets, all ending in the same number, for example `credit_memos_7`. That number is yours for the rest of
+the lab.
+
 Every query that touches your own results contains the placeholder `credit_memos_N`. Each time you paste
 one, click into the query text first (otherwise Ctrl+H opens the browser's history instead), press
 **Ctrl+H**, replace `credit_memos_N` with your dataset (for participant 7 that's `credit_memos_7`) and hit
@@ -83,9 +90,10 @@ FROM credit_memos_N.INFORMATION_SCHEMA.TABLES;
 ```
 
 You should see your email and `0`: the dataset exists, you can use it, and it's still empty. "Access
-Denied" means the number belongs to someone else; check it. If it still fails, look at `me`: maybe you're
-signed in with a different Google account than the one you registered with. If that's right too, you
-probably registered late. Let me know, and in the meantime team up with your neighbour.
+Denied" means you typed a number that isn't yours; compare it with the Explorer. If you see no numbered
+datasets at all, look at `me`: maybe you're signed in with a different Google account than the one you
+registered with. If that's right too, you probably registered late. Let me know, and in the meantime team
+up with your neighbour.
 
 To run a single statement, select it and click **Run**. You can run a whole tab, but the console then only
 shows the result of the last statement.
@@ -796,7 +804,8 @@ Your table stands on its own. It isn't joined into silver or gold, and the later
 | `Not found: Dataset ...:credit_memos_N` | The placeholder is still in the query. Ctrl+H, see step 0. |
 | `Access Denied` on CREATE or INSERT | You're writing to someone else's dataset, or into `credit_memos`, which is read-only. Check your number. |
 | `Not found: Table credit_memos...` | Check the project picker at the top: it should say `ws2026-02`. |
-| `Access Denied` already in step 0 | Wrong number, late registration, or signed in with another account. Tell me, and work with your neighbour for now. |
+| `Access Denied` already in step 0 | A number that isn't yours: compare it with the Explorer. |
+| No numbered datasets in the Explorer | Signed in with another account, or registered late. Tell me, and work with your neighbour for now. |
 | `Permission denied` at the very start | Permissions sometimes take a minute to arrive. Try again; if it persists, call me. |
 | Results end up in the wrong location | **More → Query settings**, location `EU`. |
 | `quota` or `resource exhausted` in `status` | The room is hitting Gemini all at once. Wait a minute, run 4.2 again. |
